@@ -68,7 +68,7 @@ Have a look at the [cheat sheet](https://rmarkdown.rstudio.com/lesson-15.html) a
 
 <!-- What do you think this line is? -->
 
-This line contains some [inline code](https://rmarkdown.rstudio.com/lesson-4.html) to give the time of knitting: `r now()`.
+This line contains some [inline code](https://rmarkdown.rstudio.com/lesson-4.html) to give the time of rendering: `r now()`.
 
 # Code chunks
 
@@ -124,13 +124,16 @@ Chunk options allow control over chunk outputs. See [some options here](https://
 
 > Exercise: Add an option to the doacs_line chunk to hide the code which generates the line graph.
 
+> Exercise: Add an option to the doacs_table chunk to hide the message about summarise grouping.
+
 > Exercise: Override the global options in the setup chunk so every chunk runs, but the code is not shown.
 
 ## Parameters
 
 You can [include parameters](https://rmarkdown.rstudio.com/lesson-6.html) to rerun a report with different values.
 
-```{r doacs_table_params}
+```{r doacs_table_params, message = FALSE}
+# Changing the year to a parameter
 doacs_df %>% 
     filter(year(date) == params$year) %>% 
     group_by(chemical, date) %>% 
@@ -142,3 +145,11 @@ doacs_df %>%
 ```
 
 > Exercise: Try re-rendering the report with the year 2021 using the Rstudio IDE.
+
+# Resources
+
+- [NHS-R community R markdown workshop](https://youtu.be/RaM6fgwMZIs)
+- [Cheat sheet](https://www.rstudio.com/resources/cheatsheets/)
+- [R markdown cookbook](https://bookdown.org/yihui/rmarkdown-cookbook/)
+
+- [R markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)
