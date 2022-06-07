@@ -1,0 +1,144 @@
+---
+title: "R markdown basics"
+author: "Impact team"
+date: "`r Sys.Date()`"
+output: 
+    html_document:
+        toc: true
+params:
+    year: 2020
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(plotly)
+library(reactable)
+```
+
+# R Markdown
+
+(Copied from [this](https://rmarkdown.rstudio.com/lesson-1.html))
+
+You can use R Markdown (.Rmd): 
+
+- save and execute code 
+- generate high quality, reproducible reports that can be shared with an audience
+
+Basic structure consists of: 
+
+- YAML metadata 
+- Text (markdown) 
+- Code chunks
+
+Can edit in Visual mode, more like a Word doc. (Click on 'Visual', next to 'Source' at the top of the code editor.)
+
+# YAML
+The YAML header is used to set the output format and output options.
+
+Here, we've added a table of contents using the toc: true.
+
+Have a look at the [cheat sheet](https://rmarkdown.rstudio.com/lesson-15.html) and try to add some more features:
+
+> Exercise: Make the table of contents floating.
+
+> Exercise: Give an option to download the .Rmd source code.
+
+> Exercise: Hide all the code chunks by default and allow users to show/hide code as desired.
+
+We can generate a custom R markdown template to use in the future.
+
+# Text
+
+Makes clear documentation easier.
+
+Have a look at the [cheat sheet](https://rmarkdown.rstudio.com/lesson-15.html) and try the following exercises.
+
+> Exercise: Bold and italicise some words in the list below.
+
+- assessing current practice
+- recording an action plan
+- monitoring quality improvement
+
+> Exercise: Create a link to the page on Impact reports on the NICE website.
+
+> Exercise: Embed an [image of the NICE logo](https://www.nice.org.uk/brand/our-logo) and add some alt text.
+
+<!-- What do you think this line is? -->
+
+This line contains some [inline code](https://rmarkdown.rstudio.com/lesson-4.html) to give the time of knitting: `r now()`.
+
+# Code chunks
+
+> Exercise: Insert a code chunk. Try using a keyboard shortcut.
+
+Labelling your chunks means you can navigate to each section easily via:
+- 'Outline' (top right of code editor)
+- Button at the bottom of the code editor (orange with hash symbol)
+
+## Tabs {.tabset}
+
+A demo using the DOACS data from before.
+
+```{r load_doacs}
+doacs_df <- read_csv("DOACS_data.csv", 
+                     col_types = "Dcccddd")
+```
+
+
+### Line chart
+
+> Exercise: Plot a line chart showing prescribing of all doacs over the last 2 years (reuse previous code). Try making it interactive by using the function ggplotly() from the plotly package (install the package first).
+
+```{r doacs_line}
+
+```
+
+### Table
+
+There are [many packages available](https://bookdown.org/yihui/rmarkdown-cookbook/table-other.html) for plotting tables in R markdown.
+
+We'll use [reactable](https://glin.github.io/reactable/) here. Install the package.
+
+> Exercise: Modify this table to make it filterable and searchable. Try [using an aggregate function](https://glin.github.io/reactable/articles/examples.html#grouping-and-aggregation) to give the sum items for each chemical.
+
+```{r doacs_table}
+doacs_df %>% 
+    filter(year(date) == 2020) %>% 
+    group_by(chemical, date) %>% 
+    summarise(sum_items = sum(items)) %>% 
+    reactable(
+        .,
+        groupBy = "chemical"
+    )
+```
+
+
+## Chunk options
+
+Chunk options allow control over chunk outputs. See [some options here](https://rmarkdown.rstudio.com/lesson-3.html).
+
+> Exercise: Add an option to the load_doacs chunk so the chunk still runs, but is not shown in the final document.
+
+> Exercise: Add an option to the doacs_line chunk to hide the code which generates the line graph.
+
+> Exercise: Override the global options in the setup chunk so every chunk runs, but the code is not shown.
+
+## Parameters
+
+You can [include parameters](https://rmarkdown.rstudio.com/lesson-6.html) to rerun a report with different values.
+
+```{r doacs_table_params}
+doacs_df %>% 
+    filter(year(date) == params$year) %>% 
+    group_by(chemical, date) %>% 
+    summarise(sum_items = sum(items)) %>% 
+    reactable(
+        .,
+        groupBy = "chemical"
+    )
+```
+
+> Exercise: Try re-rendering the report with the year 2021 using the Rstudio IDE.
