@@ -5,6 +5,9 @@ date: "`r Sys.Date()`"
 output: 
     html_document:
         toc: true
+        toc_float: true
+        code_download: TRUE
+        code_folding: "hide"
 params:
     year: 2020
 ---
@@ -22,15 +25,15 @@ library(reactable)
 
 (Copied from [this](https://rmarkdown.rstudio.com/lesson-1.html))
 
-You can use R Markdown (.Rmd) to: 
+You can use R Markdown (.Rmd) to:
 
-- save and execute code 
+- save and execute code
 - generate high quality, reproducible reports that can be shared with an audience
 
-Basic structure consists of: 
+Basic structure consists of:
 
 - YAML metadata
-- Text (markdown) 
+- Text (markdown)
 - Code chunks
 
 Can edit in Visual mode, more like a Word doc. (Click on 'Visual', next to 'Source' at the top of the code editor.)
@@ -38,6 +41,7 @@ Can edit in Visual mode, more like a Word doc. (Click on 'Visual', next to 'Sour
 To see your R markdown output file (e.g. html), you knit the .Rmd file by clicking the Knit button at the top of the code editor or ctrl-shift-k.
 
 # YAML
+
 The YAML header is used to set the output format and output options.
 
 Here, we've added a table of contents using the toc: true.
@@ -46,9 +50,15 @@ Have a look at the [cheat sheet](https://rmarkdown.rstudio.com/lesson-15.html) a
 
 > Exercise: Make the table of contents floating.
 
+Add toc_float: TRUE to the YAML.
+
 > Exercise: Give an option to download the .Rmd source code.
 
+Add code_download: TRUE to the YAML.
+
 > Exercise: Hide all the code chunks by default and allow users to show/hide code as desired.
+
+Add code_folding: "hide" to the YAML.
 
 We can generate a custom R markdown template to use in the future.
 
@@ -59,25 +69,38 @@ Makes clear documentation easier.
 You can navigate through the headers (#Heading 1, ##Heading 2 etc) like a table of contents in the code editor by clicking 'Outline' in the top right.
 
 Have a look at the [cheat sheet](https://rmarkdown.rstudio.com/lesson-15.html) and try the following exercises.
- 
+
 > Exercise: Bold and italicise some words in the list below.
 
 - Always leave a blank line between a list and the text above for the bullet points to render properly
-- assessing current practice
-- recording an action plan
+- assessing *current practice* (italics)
+- recording **an action plan** (bold)
 - monitoring quality improvement
 
 > Exercise: Create a link to the page on Impact reports on the NICE website.
 
+See [impact reports](https://www.nice.org.uk/about/what-we-do/into-practice/measuring-the-uptake-of-nice-guidance/impact-of-guidance).
+
 > Exercise: Embed an [image of the NICE logo](https://www.nice.org.uk/brand/our-logo) and add some alt text.
 
-<!-- What do you think this line is? -->
+This standard method doesn't seem to allow adding alt text, but the text in the square brackets is displayed as a caption at the bottom of the image.
+
+![NICE logo](https://www.nice.org.uk/Media/Default/About/Branding-guidelines/Logos/master-logo1.png)
+
+Need to use this method with fig.alt in chunk options for alt text.
+
+```{r, fig.alt = "NICE logo"}
+knitr::include_graphics("https://www.nice.org.uk/Media/Default/About/Branding-guidelines/Logos/master-logo1.png")
+```
+
+
+<!-- What do you think this line is? It's a comment (ctrl-shift-c) -->
 
 This line contains some [inline code](https://rmarkdown.rstudio.com/lesson-4.html) to give the time of rendering: `r now()`.
 
 # Code chunks
 
-> Exercise: Insert a code chunk. Try using a keyboard shortcut.
+> Exercise: Insert a code chunk. Try using a keyboard shortcut (ctrl-alt-i).
 
 Labelling your chunks (e.g. 'load_doacs' in the chunk below) means you can navigate to each section easily via the button at the bottom of the code editor (orange square with hash symbol).
 
@@ -91,19 +114,27 @@ You should run all the chunks above a chunk before running the chunk itself to m
 
 To run a chunk, ctrl-shift-enter with the cursor anywhere in the chunk (or the green play button).
 
-```{r load_doacs}
+```{r load_doacs, include = FALSE}
 # Make sure this .Rmd is saved in the same folder as where the DOACS dataset from the previous session is
 # Change the file name to whatever you've saved it as
 doacs_df <- read_csv("DOACS_data.csv", 
                      col_types = "Dcccddd")
 ```
 
-
 ### Line chart
 
 > Exercise: Plot a line chart showing prescribing of all doacs over the last 2 years (reuse previous code from DOACS exercises). Try making it interactive by using the function ggplotly() from the plotly package (install the package first).
 
-```{r doacs_line}
+```{r doacs_line, message = FALSE, echo = FALSE}
+
+g <- doacs_df %>% 
+    filter(year(date) %in% c(2020, 2021)) %>% 
+    group_by(chemical, date) %>% 
+    summarise(total = sum(items)) %>% 
+    ggplot(aes(x = date, y = total, colour = chemical)) +
+    geom_line()
+
+ggplotly(g)
 
 ```
 
@@ -115,17 +146,21 @@ We'll use [reactable](https://glin.github.io/reactable/) here. Install the packa
 
 > Exercise: Modify this table to make it filterable and searchable. Try [using an aggregate function](https://glin.github.io/reactable/articles/examples.html#grouping-and-aggregation) to give the sum items for each chemical.
 
-```{r doacs_table}
+```{r doacs_table, message = FALSE}
 doacs_df %>% 
     filter(year(date) == 2020) %>% 
     group_by(chemical, date) %>% 
     summarise(sum_items = sum(items)) %>% 
     reactable(
         .,
-        groupBy = "chemical"
+        filterable = TRUE,
+        searchable = TRUE,
+        groupBy = "chemical",
+        columns = list(
+            sum_items = colDef(aggregate = "sum")
+        )
     )
 ```
-
 
 ## Chunk options
 
@@ -133,11 +168,19 @@ Chunk options allow control over chunk outputs. See [some options here](https://
 
 > Exercise: Add an option to the load_doacs chunk so the chunk still runs, but is not shown in the final document.
 
+Add include = FALSE to the chunk. Remember to use a comma after the chunk label when adding chunk options.
+
 > Exercise: Add an option to the doacs_line chunk to hide the code which generates the line graph.
+
+Add echo = FALSE to the chunk. echo prevents the code from appearing in the output file but not the results of the code. It's often used for figures, where you want to show a chart but hide the code which generated the chart.
 
 > Exercise: Add an option to the doacs_table chunk to hide the message about summarise grouping.
 
+Add message = FALSE.
+
 > Exercise: Override the global options in the setup chunk so every chunk runs and any results are generated, but the code is not shown.
+
+Change to echo = FALSE in knitr::opts_chunk$set(echo = TRUE). We want to use echo = FALSE rather than include = FALSE as we still want to see our line chart and table.
 
 ## Parameters
 
@@ -156,6 +199,8 @@ doacs_df %>%
 ```
 
 > Exercise: Try re-rendering the report with the year 2021 using the Rstudio IDE.
+
+Click on the triangle next to 'Knit', 'Knit with Parameters', change 2020 to 2021.
 
 # Resources
 
